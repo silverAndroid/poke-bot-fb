@@ -63,6 +63,7 @@ while True:
         break
     print 'Your email or password is incorrect. Please try again..'
 print "Logged into Facebook!"
+refresh_seconds = raw_input('How many seconds would you like the bot to wait before checking for new pokes? ')
 
 while True:
 
@@ -99,7 +100,5 @@ while True:
     except IndexError:
         print 'No one to poke :('
 
-    # time.sleep(15)
-    # print "15 seconds left till next poke.."
-    print "5 second left till next poke.."
-    time.sleep(5)
+    print "{0} seconds left till next poke..".format(refresh_seconds)
+    time.sleep(float(refresh_seconds))
