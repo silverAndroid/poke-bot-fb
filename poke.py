@@ -1,4 +1,5 @@
 import getpass
+import pickle
 import re
 import time
 
@@ -13,6 +14,16 @@ headers = {
     "Content-type": "application/poke_page-www-form-urlencoded",
     "Host": "m.facebook.com"
 }
+
+
+def save_cookies(filename):
+    with open(filename, 'w') as f:
+        pickle.dump(requests.utils.dict_from_cookiejar(session.cookies), f)
+
+
+def load_cookies(filename):
+    with open(filename) as f:
+        return requests.utils.cookiejar_from_dict(pickle.load(f))
 
 
 def login():
@@ -52,8 +63,12 @@ def login():
     return login_request
 
 
-def poke():
-    poke_page = session.get('https://m.facebook.com/pokes')
+def poke(cookies):
+    poke_url = 'https://m.facebook.com/pokes'
+    if cookies is None:
+        poke_page = session.get(poke_url)
+    else:
+        poke_page = session.get(poke_url, cookies=cookies)
     # print poke_page.text
 
     soup = BeautifulSoup(poke_page.text, 'html.parser')
@@ -87,6 +102,8 @@ def poke():
         print 'No one to poke :('
 
 
+cookies = None
+
 while True:
     session = requests.Session()
     print "Loading Facebook..."
@@ -94,12 +111,25 @@ while True:
     soup = BeautifulSoup(load_facebook_request.text, 'html.parser')
     print "Loaded Facebook!"
 
+    try:
+        cookies = load_cookies('cookies')
+        break
+    except IOError as e:
+        if "No such file or directory" not in e.strerror:
+            raise
+
     print "Login to Facebook"
     email = raw_input("Email: ")
     password = getpass.getpass("Password: ")
+    cookies_save = ''
+    while cookies_save is not 'y' or not 'n':
+        cookies_save = raw_input('Stay logged in? (y/n) ')
+    cookies_save = cookies_save == 'y'
     login_request = login()
 
     if '/login' not in login_request.url:
+        if cookies_save:
+            save_cookies('cookies')
         break
     print 'Your email or password is incorrect. Please try again..'
 print "Logged into Facebook!"
@@ -107,6 +137,6 @@ print "Logged into Facebook!"
 refresh_seconds = raw_input('How many seconds would you like the bot to wait before checking for new pokes? ')
 
 while True:
-    poke()
+    poke(cookies)
     print "{0} seconds left till next poke..".format(refresh_seconds)
     time.sleep(float(refresh_seconds))
