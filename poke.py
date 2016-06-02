@@ -14,18 +14,8 @@ headers = {
     "Host": "m.facebook.com"
 }
 
-while True:
-    session = requests.Session()
-    print "Loading Facebook..."
-    r = session.get('https://m.facebook.com')
-    soup = BeautifulSoup(r.text, 'html.parser')
-    print "Loaded Facebook!"
 
-    print "Login to Facebook"
-    email = raw_input("Email: ")
-    password = getpass.getpass("Password: ")
-    # password = raw_input("Password: ")
-
+def login():
     # print soup.prettify()
     login_form = soup.findAll('div', {'class': 'g'})[0] \
         .findAll('div', {'id': 'viewport'})[0] \
@@ -59,14 +49,10 @@ while True:
 
     print "Logging into Facebook..."
     login_request = session.post(login_url, data=params, headers=headers)
-    if '/login' not in login_request.url:
-        break
-    print 'Your email or password is incorrect. Please try again..'
-print "Logged into Facebook!"
-refresh_seconds = raw_input('How many seconds would you like the bot to wait before checking for new pokes? ')
+    return login_request
 
-while True:
 
+def poke():
     poke_page = session.get('https://m.facebook.com/pokes')
     # print poke_page.text
 
@@ -100,5 +86,27 @@ while True:
     except IndexError:
         print 'No one to poke :('
 
+
+while True:
+    session = requests.Session()
+    print "Loading Facebook..."
+    load_facebook_request = session.get('https://m.facebook.com')
+    soup = BeautifulSoup(load_facebook_request.text, 'html.parser')
+    print "Loaded Facebook!"
+
+    print "Login to Facebook"
+    email = raw_input("Email: ")
+    password = getpass.getpass("Password: ")
+    login_request = login()
+
+    if '/login' not in login_request.url:
+        break
+    print 'Your email or password is incorrect. Please try again..'
+print "Logged into Facebook!"
+
+refresh_seconds = raw_input('How many seconds would you like the bot to wait before checking for new pokes? ')
+
+while True:
+    poke()
     print "{0} seconds left till next poke..".format(refresh_seconds)
     time.sleep(float(refresh_seconds))
