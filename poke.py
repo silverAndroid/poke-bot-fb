@@ -46,7 +46,17 @@ def poke(cookies):
                 .findAll('div')[7] \
                 .findAll('a', {'class': 'ca'})[0]['href']
         except IndexError:
-            break
+            try:
+                poke_name = poke_container.findAll('div', {'class': 'bq'})[i] \
+                    .findAll('div', {'class': 'bw'})[0].text
+                substrings = [m.start() for m in
+                              re.finditer('( poked you [0-9]+ times in a row)', poke_name.replace(',', ''))]
+
+                poke_link = poke_container.findAll('div', {'class': 'bq'})[i] \
+                    .findAll('div')[7] \
+                    .findAll('a', {'class': 'bz'})[0]['href']
+            except IndexError:
+                break
 
         # print poke_container
         # print poke_link
@@ -60,42 +70,44 @@ def poke(cookies):
     if i == 0:
         print 'No one to poke :('
 
-cookies = None
 
-while True:
-    session = requests.Session()
-    print "Loading Facebook..."
-    load_facebook_request = session.get('https://m.facebook.com')
-    soup = BeautifulSoup(load_facebook_request.text, 'html.parser')
-    print "Loaded Facebook!"
+if __name__ == '__main__':
+    cookies = None
 
-    try:
-        cookies = load_cookies('cookies')
-        break
-    except IOError as e:
-        if "No such file or directory" not in e.strerror:
-            raise
+    while True:
+        session = requests.Session()
+        print "Loading Facebook..."
+        load_facebook_request = session.get('https://m.facebook.com')
+        soup = BeautifulSoup(load_facebook_request.text, 'html.parser')
+        print "Loaded Facebook!"
 
-    print "Login to Facebook"
-    email = raw_input("Email: ")
-    password = getpass.getpass("Password: ")
-    cookies_save = ''
-    while cookies_save is not 'y' or not 'n':
-        cookies_save = raw_input('Stay logged in? (y/n) ')
-    cookies_save = cookies_save == 'y'
-    login_obj = login.Login(email, password)
-    login_request = login_obj.login(soup, session)
+        try:
+            cookies = load_cookies('cookies')
+            break
+        except IOError as e:
+            if "No such file or directory" not in e.strerror:
+                raise
 
-    if '/login' not in login_request.url:
-        if cookies_save:
-            save_cookies('cookies')
-        break
-    print 'Your email or password is incorrect. Please try again..'
-print "Logged into Facebook!"
+        print "Login to Facebook"
+        email = raw_input("Email: ")
+        password = getpass.getpass("Password: ")
+        cookies_save = ''
+        while cookies_save is not 'y' or not 'n':
+            cookies_save = raw_input('Stay logged in? (y/n) ')
+        cookies_save = cookies_save == 'y'
+        login_obj = login.Login(email, password)
+        login_request = login_obj.login(soup, session)
 
-refresh_seconds = raw_input('How many seconds would you like the bot to wait before checking for new pokes? ')
+        if '/login' not in login_request.url:
+            if cookies_save:
+                save_cookies('cookies')
+            break
+        print 'Your email or password is incorrect. Please try again..'
+    print "Logged into Facebook!"
 
-while True:
-    poke(cookies)
-    print "{0} seconds left till next poke..".format(refresh_seconds)
-    time.sleep(float(refresh_seconds))
+    refresh_seconds = raw_input('How many seconds would you like the bot to wait before checking for new pokes? ')
+
+    while True:
+        poke(cookies)
+        print "{0} seconds left till next poke..".format(refresh_seconds)
+        time.sleep(float(refresh_seconds))
