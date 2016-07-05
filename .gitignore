@@ -1,3 +1,6 @@
 .idea
 cookies
 *.pyc
+build
+poke-bot
+poke-bot.*
